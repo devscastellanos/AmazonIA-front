@@ -9,7 +9,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import type { GameResponse } from "@/types/juego";
-import { fetchWithSession, getStoredAccessToken } from "./session";
+import { getStoredAccessToken } from "./session";
 
 export interface GameStateData {
   game: GameResponse | null;
@@ -39,7 +39,9 @@ export function useGameState(gameId: string | null, pollMs = 0): GameStateData {
     setError(null);
 
     try {
-      const res = await fetchWithSession(`${GAMES_URL}/${gameId}`, {}, token);
+      const res = await fetch(`${GAMES_URL}/${gameId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       // Si ya llegó un fetch más nuevo, ignoramos este resultado
       if (fetchIdRef.current !== thisFetchId) return;

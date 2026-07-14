@@ -11,7 +11,6 @@ import {
   refreshGuestSession,
 } from "./session";
 
-const REFRESH_MARGIN_MS = 60_000;
 
 export function useGuestSessionToken(enabled = true): void {
   useEffect(() => {
@@ -37,7 +36,7 @@ export function useGuestSessionToken(enabled = true): void {
         return;
       }
 
-      const delay = expiresAtDate.getTime() - Date.now() - REFRESH_MARGIN_MS;
+      const delay = expiresAtDate.getTime() - Date.now();
       if (delay <= 0) {
         void refreshAndReschedule(token);
         return;
@@ -66,10 +65,16 @@ export function useGuestSessionToken(enabled = true): void {
 
         await loadCurrentSession(refreshedToken);
       } catch (error) {
-        // Una sesión nueva no sería dueña de la partida en curso. Si el
-        // refresh falla, conservamos el error en vez de cambiar de identidad
-        // silenciosamente y provocar respuestas 403 sobre esa partida.
-        console.error("No se pudo renovar la sesión de la partida:", error);
+        if (!isTokenExpiredError(error)) {
+          throw error;
+        }
+
+        const renewedToken = await createGuestSession();
+        if (cancelled) {
+          return;
+        }
+
+        await loadCurrentSession(renewedToken);
       }
     };
 
