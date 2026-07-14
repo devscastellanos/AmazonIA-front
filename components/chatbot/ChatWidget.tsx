@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { X, Send, Loader2, ChevronDown } from 'lucide-react';
 
 interface Evidencia {
@@ -152,6 +153,13 @@ export function ChatWidget() {
     if (abierto) setTimeout(() => inputRef.current?.focus(), 100);
   }, [abierto]);
 
+  // Permite abrir el chat desde cualquier parte con: window.dispatchEvent(new CustomEvent('amazonia:open-chat'))
+  useEffect(() => {
+    const handler = () => setAbierto(true);
+    window.addEventListener('amazonia:open-chat', handler);
+    return () => window.removeEventListener('amazonia:open-chat', handler);
+  }, []);
+
   async function enviarPregunta(pregunta: string) {
     if (!pregunta.trim() || cargando) return;
 
@@ -223,7 +231,9 @@ export function ChatWidget() {
           onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
           aria-label="Abrir chatbot AmazonIA"
         >
-          <span style={{ fontSize: 22, lineHeight: 1 }}>🌿</span>
+          <span style={{ fontSize: 22, lineHeight: 1 }}>
+            <Image src="/logo.png" alt="AmazonIA" width={34} height={34} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+          </span>
         </button>
       )}
 
@@ -247,7 +257,9 @@ export function ChatWidget() {
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 22 }}>🌿</span>
+              <span style={{ fontSize: 22 }}>
+                <Image src="/logo.png" alt="AmazonIA" width={32} height={32} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+              </span>
               <div>
                 <p style={{ color: 'white', fontWeight: 700, fontSize: 14, margin: 0 }}>AmazonIA Chat</p>
                 <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, margin: 0 }}>
