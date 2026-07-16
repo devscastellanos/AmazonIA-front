@@ -13,6 +13,38 @@ Entidad: SIATAC
 
 Variables utilizadas: 8
 
+### Variables consideradas en el dataset
+
+Las variables se distinguen en tres niveles según la etapa del pipeline:
+
+**1. Campos capturados desde la fuente (SIATAC) — `limpiar_datos.py`**
+
+| Campo | Origen |
+|---|---|
+| `acq_date` | Atributo del feature (fecha de adquisición) |
+| `departamen` | Atributo del feature |
+| `municipio` | Atributo del feature |
+| `paisaje` | Atributo del feature |
+| `lon` | Geometría del punto |
+| `lat` | Geometría del punto |
+
+6 valores extraídos por cada punto de calor individual antes de cualquier agregación.
+
+**2. Columnas del dataset agregado — salida de `limpiar_datos.py`**
+
+El script agrupa por clave compuesta (`anio`, `mes`, `semana_mes`, `departamento`, `municipio`, `paisaje`) y produce este CSV:
+
+| # | Columna | Tipo | Rol |
+|---|---|---|---|
+| 1 | `anio` | Derivado de `acq_date` | Dimensión temporal |
+| 2 | `mes` | Derivado de `acq_date` | Dimensión temporal |
+| 3 | `semana_mes` | Calculado: `(dt.day - 1) // 7 + 1` | Dimensión temporal |
+| 4 | `departamento` | Atributo | Dimensión geográfica |
+| 5 | `municipio` | Atributo | Dimensión geográfica |
+| 6 | `paisaje` | Atributo | Dimensión de cobertura/tipo de paisaje |
+| 7 | `conteo_puntos` | Agregado (conteo de la agrupación) | Métrica objetivo |
+| 8 | `coordenadas_json` | Lista de coordenadas de la agrupación | Soporte geoespacial para el mapa |
+
 Scripts utilizados: `AmazonIA-front/analytics/limpiar_datos.py`, `AmazonIA-front/analytics/prediccion_datos.py`
 
 ---
