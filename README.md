@@ -11,11 +11,12 @@ Link: https://www.datos.gov.co/dataset/Puntos-de-calor-por-regi-n-Hist-rico-Esca
 
 Entidad: SIATAC
 
-Variables utilizadas: 8
+**Variables del dataset fuente: 6** — capturadas directamente desde SIATAC por punto de calor individual.  
+**Variables en el CSV de salida: 8** — resultado de agregar y transformar las 6 originales en `limpiar_datos.py`, usado como entrada para el modelo de predicción. Archivo generado: `analytics/data/puntos_calor_por_semana_mes_con_coordenadas.csv`
 
 ### Variables consideradas en el dataset
 
-Las variables se distinguen en tres niveles según la etapa del pipeline:
+Las variables se distinguen en dos niveles según la etapa del pipeline:
 
 **1. Campos capturados desde la fuente (SIATAC) — `limpiar_datos.py`**
 
