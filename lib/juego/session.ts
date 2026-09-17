@@ -4,6 +4,7 @@ export const REFRESH_SESSION_URL = "/api/sessions/refresh";
 export const ACCESS_TOKEN_STORAGE_KEY = "accessToken";
 
 let refreshInFlight: Promise<string> | null = null;
+let createSessionInFlight: Promise<string> | null = null;
 
 export interface SessionCurrentInfo {
   expiresAt: string | null;
@@ -121,7 +122,7 @@ export function getStoredAccessToken(): string | null {
   return readStoredAccessToken();
 }
 
-export async function createGuestSession(): Promise<string> {
+async function requestGuestSession(): Promise<string> {
   const response = await fetch(GUEST_SESSION_URL, {
     method: "POST",
     credentials: "include",
@@ -138,6 +139,16 @@ export async function createGuestSession(): Promise<string> {
 
   setStoredAccessToken(token);
   return token;
+}
+
+export function createGuestSession(): Promise<string> {
+  if (!createSessionInFlight) {
+    createSessionInFlight = requestGuestSession().finally(() => {
+      createSessionInFlight = null;
+    });
+  }
+
+  return createSessionInFlight;
 }
 
 export async function getCurrentSessionInfo(token?: string | null): Promise<SessionCurrentInfo> {
@@ -166,7 +177,7 @@ export async function getCurrentSessionInfo(token?: string | null): Promise<Sess
   return { expiresAt: extractExpiresAtValue(payload) };
 }
 
-export async function refreshGuestSession(token?: string | null): Promise<string> {
+async function requestGuestSessionRefresh(token?: string | null): Promise<string> {
   const response = await fetch(REFRESH_SESSION_URL, {
     method: "POST",
     credentials: "include",
@@ -192,9 +203,10 @@ export async function refreshGuestSession(token?: string | null): Promise<string
   return refreshedToken;
 }
 
-async function refreshAccessToken(token?: string | null): Promise<string> {
+/** Comparte una sola rotación de cookie entre todos los consumidores. */
+export function refreshGuestSession(token?: string | null): Promise<string> {
   if (!refreshInFlight) {
-    refreshInFlight = refreshGuestSession(token).finally(() => {
+    refreshInFlight = requestGuestSessionRefresh(token).finally(() => {
       refreshInFlight = null;
     });
   }
@@ -213,14 +225,16 @@ export async function fetchWithSession(
     return fetch(input, { ...init, headers, credentials: init.credentials ?? "include" });
   };
 
-  const currentToken = token ?? getStoredAccessToken();
+  // El argumento puede haber quedado obsoleto mientras otra petición renovaba
+  // la sesión. El valor almacenado siempre representa el token más reciente.
+  const currentToken = getStoredAccessToken() ?? token;
   if (!currentToken) throw new Error("No hay token de sesión disponible.");
 
   const firstResponse = await request(currentToken);
   if (firstResponse.status !== 401) return firstResponse;
 
   try {
-    return await request(await refreshAccessToken(currentToken));
+    return await request(await refreshGuestSession(currentToken));
   } catch {
     // No crear una sesión nueva: esa sesión no sería dueña de la partida actual.
     return firstResponse;

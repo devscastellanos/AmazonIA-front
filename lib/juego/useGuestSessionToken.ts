@@ -37,14 +37,22 @@ export function useGuestSessionToken(enabled = true): void {
         return;
       }
 
-      const delay = expiresAtDate.getTime() - Date.now() - REFRESH_MARGIN_MS;
-      if (delay <= 0) {
-        void refreshAndReschedule(token);
+      const remainingMs = expiresAtDate.getTime() - Date.now();
+      if (remainingMs <= 0) {
+        void refreshAndReschedule(token).catch((error) => {
+          console.error("No se pudo renovar la sesión de la partida:", error);
+        });
         return;
       }
 
+      // Para TTL cortos usamos el 10 % del tiempo restante para no entrar en
+      // un ciclo inmediato de renovaciones.
+      const marginMs = Math.min(REFRESH_MARGIN_MS, remainingMs / 10);
+      const delay = remainingMs - marginMs;
       timeoutId = window.setTimeout(() => {
-        void refreshAndReschedule(token);
+        void refreshAndReschedule(getStoredAccessToken() ?? token).catch((error) => {
+          console.error("No se pudo renovar la sesión de la partida:", error);
+        });
       }, delay);
     };
 
@@ -58,19 +66,12 @@ export function useGuestSessionToken(enabled = true): void {
     };
 
     const refreshAndReschedule = async (token: string) => {
-      try {
-        const refreshedToken = await refreshGuestSession(token);
-        if (cancelled) {
-          return;
-        }
-
-        await loadCurrentSession(refreshedToken);
-      } catch (error) {
-        // Una sesión nueva no sería dueña de la partida en curso. Si el
-        // refresh falla, conservamos el error en vez de cambiar de identidad
-        // silenciosamente y provocar respuestas 403 sobre esa partida.
-        console.error("No se pudo renovar la sesión de la partida:", error);
+      const refreshedToken = await refreshGuestSession(token);
+      if (cancelled) {
+        return;
       }
+
+      await loadCurrentSession(refreshedToken);
     };
 
     void (async () => {

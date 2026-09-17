@@ -8,7 +8,6 @@ import {
 import { usePathname } from "next/navigation";
 
 import { GameSessionExpiryButton } from "@/components/juego/GameSessionExpiryButton";
-import { useGuestSessionToken } from "@/lib/juego/useGuestSessionToken";
 
 interface HeaderProps {
   title: string;
@@ -51,7 +50,6 @@ function bajarArchivo(contenido: string, nombre: string) {
 export function Header({ title, subtitle }: HeaderProps) {
   const pathname = usePathname();
   const showGameSessionButton = pathname.startsWith("/juego");
-  useGuestSessionToken(showGameSessionButton);
 
   // Mostrar el botón Export solo en páginas de datos
   const showExport = pathname.startsWith("/predicciones") || pathname.startsWith("/historico");
@@ -127,4 +125,3 @@ export function Header({ title, subtitle }: HeaderProps) {
     </header>
   );
 }
-
