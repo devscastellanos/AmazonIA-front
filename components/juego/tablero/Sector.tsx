@@ -85,6 +85,7 @@ export function Sector({ tipo, etiqueta, cartas }: SectorProps) {
           style={{ display: "flex", flexWrap: "wrap", gap: 8}}>
     {cartas.map(carta => (
           <motion.div
+            key={carta.id}
             layoutId={carta.id}
             data-testid={`sector-carta-${tipo}`}
             className="rounded-lg overflow-hidden"
