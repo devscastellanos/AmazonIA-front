@@ -5,6 +5,11 @@ import { fetchWithSession } from "./session";
 
 export const GAMES_URL = "/api/games";
 
+const configuredSeed = Number(process.env.NEXT_PUBLIC_GAME_SEED ?? "778");
+const GAME_SEED =
+  Number.isSafeInteger(configuredSeed) && configuredSeed > 0 ? configuredSeed : 778;
+const GAME_DIFFICULTY = process.env.NEXT_PUBLIC_GAME_DIFFICULTY ?? "easy";
+
 async function enviarComando(
   accessToken: string,
   gameId: string,
@@ -87,7 +92,10 @@ export async function crearPartida(
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
+      body: JSON.stringify({
+        seed: GAME_SEED,
+        difficulty: GAME_DIFFICULTY,
+      }),
       signal,
     },
     accessToken,
